@@ -17,6 +17,17 @@ export default defineConfig(async () => ({
     port: 1420,
     strictPort: true,
     host: host || false,
+    proxy: {
+      "/kugou-api": {
+        target: "https://m.kugou.com",
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/kugou-api/, ""),
+        headers: {
+          "User-Agent":
+            "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 Mobile/15E148",
+        },
+      },
+    },
     hmr: host
       ? {
           protocol: "ws",

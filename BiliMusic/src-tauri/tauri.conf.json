@@ -12,9 +12,12 @@
   "app": {
     "windows": [
       {
-        "title": "bilimusic",
-        "width": 800,
-        "height": 600
+        "title": "BiliMusic",
+        "width": 1280,
+        "height": 820,
+        "minWidth": 900,
+        "minHeight": 650,
+        "center": true
       }
     ],
     "security": {
