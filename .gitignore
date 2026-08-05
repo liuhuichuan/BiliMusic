@@ -1,0 +1,69 @@
+# Node.js / Vue / Vite
+**/node_modules/
+**/dist/
+**/dist-ssr/
+**/.vite/
+*.local
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Rust / Cargo
+**/target/
+*.profraw
+
+# Tauri generated files
+**/src-tauri/gen/schemas/
+
+# Android / Gradle generated files
+**/src-tauri/gen/android/.gradle/
+**/src-tauri/gen/android/.idea/
+**/src-tauri/gen/android/.tauri/
+**/src-tauri/gen/android/build/
+**/src-tauri/gen/android/buildSrc/build/
+**/src-tauri/gen/android/app/build/
+**/src-tauri/gen/android/local.properties
+**/src-tauri/gen/android/tauri.settings.gradle
+**/src-tauri/gen/android/app/tauri.build.gradle.kts
+**/src-tauri/gen/android/app/proguard-tauri.pro
+**/src-tauri/gen/android/app/tauri.properties
+**/src-tauri/gen/android/app/src/main/**/generated/
+**/src-tauri/gen/android/app/src/main/jniLibs/**/*.so
+**/src-tauri/gen/android/app/src/main/assets/tauri.conf.json
+*.apk
+*.aab
+
+# Environment files and signing secrets
+**/.env
+**/.env.*
+!**/.env.example
+*.jks
+*.keystore
+**/key.properties
+**/keystore.properties
+
+# Editors
+**/.vscode/*
+!**/.vscode/extensions.json
+**/.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Operating system files
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Local application data
+/data/
+
+# Stray lockfile at the repository root (the app lockfile is kept)
+/package-lock.json
