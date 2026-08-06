@@ -1,7 +1,6 @@
 import { invoke } from "@tauri-apps/api/core";
 import { MusicAccess, RankCategory } from "../constants/music";
 import type {
-  PlaybackTrack,
   Rank,
   RankDetail,
   RawRank,
@@ -28,20 +27,6 @@ interface RankInfoResponse {
     pagesize?: number;
     list?: RawSong[];
   };
-}
-
-interface PlaybackResponse {
-  status?: number;
-  errcode?: number;
-  error?: string;
-  url?: string;
-  backup_url?: string[];
-  imgUrl?: string;
-  fileName?: string;
-  songName?: string;
-  singerName?: string;
-  author_name?: string;
-  timeLength?: number;
 }
 
 const FALLBACK_COVERS = [
@@ -134,25 +119,5 @@ export async function getRankDetail(rankId: number, page = 1): Promise<RankDetai
     total: payload.songs?.total || rawSongs.length,
     page: payload.songs?.page || page,
     pageSize: payload.songs?.pagesize || rawSongs.length,
-  };
-}
-
-export async function getPlayback(song: Song): Promise<PlaybackTrack> {
-  const payload = await requestJson<PlaybackResponse>(
-    `/app/i/getSongInfo.php?cmd=playInfo&hash=${encodeURIComponent(song.id)}`,
-  );
-  if (!payload.url) {
-    throw new Error(payload.error || "该歌曲暂受版权限制，当前无法播放");
-  }
-
-  const parsed = splitFilename(payload.fileName);
-  return {
-    ...song,
-    title: payload.songName || parsed.title || song.title,
-    artist: payload.singerName || payload.author_name || parsed.artist || song.artist,
-    duration: payload.timeLength || song.duration,
-    cover: imageUrl(payload.imgUrl) || song.cover,
-    audioUrl: payload.url.replace(/^http:/, "https:"),
-    fallbackUrls: (payload.backup_url || []).map((url) => url.replace(/^http:/, "https:")),
   };
 }

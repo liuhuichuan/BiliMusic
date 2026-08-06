@@ -1,12 +1,16 @@
 import { defineConfig } from "vite";
 import vue from "@vitejs/plugin-vue";
+import { bilibiliMediaProxy } from "./vite/bilibiliMediaProxy";
+
+const BILIBILI_USER_AGENT =
+  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/131.0 Safari/537.36";
 
 // @ts-expect-error process is a nodejs global
 const host = process.env.TAURI_DEV_HOST;
 
 // https://vite.dev/config/
 export default defineConfig(async () => ({
-  plugins: [vue()],
+  plugins: [vue(), bilibiliMediaProxy()],
 
   // Vite options tailored for Tauri development and only applied in `tauri dev` or `tauri build`
   //
@@ -25,6 +29,17 @@ export default defineConfig(async () => ({
         headers: {
           "User-Agent":
             "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 Mobile/15E148",
+        },
+      },
+      "/bilibili-api": {
+        target: "https://api.bilibili.com",
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/bilibili-api/, ""),
+        headers: {
+          Accept: "application/json",
+          Origin: "https://www.bilibili.com",
+          Referer: "https://www.bilibili.com/",
+          "User-Agent": BILIBILI_USER_AGENT,
         },
       },
     },

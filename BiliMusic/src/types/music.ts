@@ -33,6 +33,14 @@ export interface RankDetail {
 export interface PlaybackTrack extends Song {
   audioUrl: string;
   fallbackUrls: string[];
+  source: {
+    provider: "bilibili";
+    label: string;
+    videoId: string;
+    videoTitle: string;
+    uploader: string;
+    pageUrl: string;
+  };
 }
 
 export interface RawSong {

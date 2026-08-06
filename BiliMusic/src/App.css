@@ -928,6 +928,20 @@
   font-size: 9px;
 }
 
+.player-source {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 6px;
+  padding: 2px 5px;
+  color: #f26a8d;
+  border: 1px solid rgba(242, 106, 141, 0.2);
+  border-radius: 5px;
+  font-size: 7px;
+  font-weight: 750;
+  line-height: 1;
+  vertical-align: 1px;
+}
+
 .player-center {
   display: grid;
   gap: 5px;

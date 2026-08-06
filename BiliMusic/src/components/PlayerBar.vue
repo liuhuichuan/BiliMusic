@@ -88,7 +88,7 @@ async function handleAudioError() {
   const fallback = fallbackSources.value[nextIndex];
   if (!fallback) {
     playing.value = false;
-    emit("playbackError", "音源已经失效，请稍后重试或选择其他歌曲");
+    emit("playbackError", "Bilibili 音源已经失效，请稍后重试或重新选择歌曲");
     return;
   }
 
@@ -132,8 +132,11 @@ onBeforeUnmount(() => audio.value?.pause());
         <Music2 v-else :size="21" />
       </span>
       <span class="player-copy">
-        <strong>{{ loading ? '正在获取音源…' : track?.title || '还没有播放音乐' }}</strong>
-        <small>{{ track?.artist || '从榜单中挑一首喜欢的歌' }}</small>
+        <strong>{{ loading ? '正在匹配 Bilibili 音源…' : track?.title || '还没有播放音乐' }}</strong>
+        <small>
+          {{ track?.artist || '从榜单中挑一首喜欢的歌' }}
+          <span v-if="track" class="player-source">{{ track.source.label }}</span>
+        </small>
       </span>
     </div>
 

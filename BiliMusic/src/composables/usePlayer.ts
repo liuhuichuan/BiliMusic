@@ -1,5 +1,5 @@
 import { computed, ref } from "vue";
-import { getPlayback } from "../services/kugou";
+import { getBilibiliPlayback } from "../services/bilibili";
 import type { PlaybackTrack, Song } from "../types/music";
 import { getErrorMessage } from "../utils/errors";
 
@@ -27,7 +27,7 @@ export function usePlayer() {
     error.value = "";
 
     try {
-      const track = await getPlayback(song);
+      const track = await getBilibiliPlayback(song);
       if (version === requestVersion) currentTrack.value = track;
     } catch (caughtError) {
       if (version === requestVersion) error.value = getErrorMessage(caughtError);
