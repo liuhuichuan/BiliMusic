@@ -39,6 +39,11 @@ interface PlayUrlResponse extends BilibiliResponse {
   data?: { dash?: { audio?: DashAudio[] } };
 }
 
+class NonRetryablePlaybackError extends Error {}
+
+const PLAYBACK_RETRY_DELAYS = [0, 600, 1600] as const;
+const pendingPlaybacks = new Map<string, Promise<PlaybackTrack>>();
+
 const UNWANTED_VERSIONS = [
   "翻唱",
   "伴奏",
@@ -178,7 +183,15 @@ async function playableUrls(urls: string[]): Promise<{ audioUrl: string; fallbac
   };
 }
 
-export async function getBilibiliPlayback(song: Song): Promise<PlaybackTrack> {
+function wait(milliseconds: number): Promise<void> {
+  return new Promise((resolve) => window.setTimeout(resolve, milliseconds));
+}
+
+function playbackRequestKey(song: Song): string {
+  return `${song.id}\u0000${song.title}\u0000${song.artist}`;
+}
+
+async function resolveBilibiliPlayback(song: Song): Promise<PlaybackTrack> {
   const keyword = `${song.title} ${song.artist}`.trim();
   const search = await requestBilibili<SearchResponse>(
     `/x/web-interface/search/type?search_type=video&page=1&order=totalrank` +
@@ -188,8 +201,13 @@ export async function getBilibiliPlayback(song: Song): Promise<PlaybackTrack> {
     .map((video) => ({ video, score: matchScore(video, song) }))
     .sort((left, right) => right.score - left.score);
 
-  if (!ranked.length || ranked[0].score < 60) {
-    throw new Error(`没有找到与“${song.title}”足够匹配的 Bilibili 音源`);
+  // Bilibili 偶尔会在网络刚恢复或风控波动时返回 code=0 但结果为空。
+  // 空结果允许外层重试；有结果但相似度不足则属于确定性不匹配，无需重复请求。
+  if (!ranked.length) {
+    throw new Error(`Bilibili 暂未返回“${song.title}”的搜索结果`);
+  }
+  if (ranked[0].score < 60) {
+    throw new NonRetryablePlaybackError(`没有找到与“${song.title}”足够匹配的 Bilibili 音源`);
   }
 
   let lastError: unknown;
@@ -216,4 +234,31 @@ export async function getBilibiliPlayback(song: Song): Promise<PlaybackTrack> {
 
   const detail = lastError instanceof Error ? `：${lastError.message}` : "";
   throw new Error(`找到相关视频，但没有可播放的 Bilibili 音频${detail}`);
+}
+
+async function resolveWithRetry(song: Song): Promise<PlaybackTrack> {
+  let lastError: unknown;
+
+  for (const delay of PLAYBACK_RETRY_DELAYS) {
+    if (delay) await wait(delay);
+
+    try {
+      return await resolveBilibiliPlayback(song);
+    } catch (error) {
+      if (error instanceof NonRetryablePlaybackError) throw error;
+      lastError = error;
+    }
+  }
+
+  throw lastError;
+}
+
+export function getBilibiliPlayback(song: Song): Promise<PlaybackTrack> {
+  const key = playbackRequestKey(song);
+  const pending = pendingPlaybacks.get(key);
+  if (pending) return pending;
+
+  const request = resolveWithRetry(song).finally(() => pendingPlaybacks.delete(key));
+  pendingPlaybacks.set(key, request);
+  return request;
 }
