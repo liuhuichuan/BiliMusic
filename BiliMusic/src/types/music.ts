@@ -30,6 +30,11 @@ export interface RankDetail {
   pageSize: number;
 }
 
+export interface SongSearchResult {
+  songs: Song[];
+  total: number;
+}
+
 export interface PlaybackTrack extends Song {
   audioUrl: string;
   fallbackUrls: string[];

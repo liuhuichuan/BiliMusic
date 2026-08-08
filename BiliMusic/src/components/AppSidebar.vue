@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { BarChart3, Headphones, Music2, Sparkles } from "@lucide/vue";
 
-defineProps<{ activeView: "new" | "rankings" }>();
+defineProps<{ activeView: "new" | "rankings" | "favorites" | "search" }>();
 
 const emit = defineEmits<{
   navigate: [view: "new" | "rankings"];

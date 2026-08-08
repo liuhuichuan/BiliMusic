@@ -31,6 +31,16 @@ export default defineConfig(async () => ({
             "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 Mobile/15E148",
         },
       },
+      "/kugou-search-api": {
+        target: "https://songsearch.kugou.com",
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/kugou-search-api/, ""),
+        headers: {
+          Accept: "application/json",
+          "User-Agent":
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/131.0 Safari/537.36",
+        },
+      },
       "/bilibili-api": {
         target: "https://api.bilibili.com",
         changeOrigin: true,

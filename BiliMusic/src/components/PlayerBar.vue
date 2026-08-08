@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import {
   ListMusic,
+  Heart,
   LoaderCircle,
   Music2,
   Pause,
@@ -19,11 +20,13 @@ const props = defineProps<{
   loading: boolean;
   canGoPrevious: boolean;
   canGoNext: boolean;
+  isFavorite: boolean;
 }>();
 
 const emit = defineEmits<{
   previous: [];
   next: [];
+  toggleFavorite: [];
   playbackError: [message: string];
 }>();
 
@@ -138,6 +141,17 @@ onBeforeUnmount(() => audio.value?.pause());
           <span v-if="track" class="player-source">{{ track.source.label }}</span>
         </small>
       </span>
+      <button
+        class="player-favorite"
+        :class="{ active: isFavorite }"
+        type="button"
+        :disabled="!track"
+        :aria-label="isFavorite ? '从我喜欢中删除' : '添加到我喜欢'"
+        :title="isFavorite ? '从我喜欢中删除' : '添加到我喜欢'"
+        @click="emit('toggleFavorite')"
+      >
+        <Heart :size="17" :fill="isFavorite ? 'currentColor' : 'none'" />
+      </button>
     </div>
 
     <div class="player-center">

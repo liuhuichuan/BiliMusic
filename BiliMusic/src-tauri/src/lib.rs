@@ -7,6 +7,7 @@ use std::{
 use tauri::{http, State};
 
 const KUGOU_BASE_URL: &str = "https://m.kugou.com";
+const KUGOU_SEARCH_URL: &str = "https://songsearch.kugou.com/song_search_v2";
 const BILIBILI_API_BASE_URL: &str = "https://api.bilibili.com";
 const BILIBILI_REFERER: &str = "https://www.bilibili.com/";
 const KUGOU_USER_AGENT: &str =
@@ -92,6 +93,36 @@ async fn fetch_kugou(state: State<'_, ApiState>, path: String) -> Result<Value, 
         .json::<Value>()
         .await
         .map_err(|error| format!("音乐数据解析失败：{error}"))
+}
+
+#[tauri::command]
+async fn search_kugou(state: State<'_, ApiState>, keyword: String) -> Result<Value, String> {
+    let keyword = keyword.trim();
+    if keyword.is_empty() || keyword.chars().count() > 80 {
+        return Err("搜索关键词长度不正确".to_string());
+    }
+
+    state
+        .kugou_client
+        .get(KUGOU_SEARCH_URL)
+        .query(&[
+            ("keyword", keyword),
+            ("page", "1"),
+            ("pagesize", "30"),
+            ("platform", "WebFilter"),
+            ("filter", "2"),
+            ("iscorrection", "1"),
+            ("privilege_filter", "0"),
+        ])
+        .header(reqwest::header::ACCEPT, "application/json")
+        .send()
+        .await
+        .map_err(|error| format!("歌曲搜索连接失败：{error}"))?
+        .error_for_status()
+        .map_err(|error| format!("歌曲搜索返回异常：{error}"))?
+        .json::<Value>()
+        .await
+        .map_err(|error| format!("歌曲搜索数据解析失败：{error}"))
 }
 
 #[tauri::command]
@@ -260,6 +291,7 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .invoke_handler(tauri::generate_handler![
             fetch_kugou,
+            search_kugou,
             fetch_bilibili,
             register_bilibili_audio
         ])

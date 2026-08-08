@@ -6,6 +6,7 @@ import type {
   RawRank,
   RawSong,
   Song,
+  SongSearchResult,
 } from "../types/music";
 
 interface HomeResponse {
@@ -29,6 +30,25 @@ interface RankInfoResponse {
   };
 }
 
+interface RawSearchSong {
+  FileHash?: string;
+  SongName?: string;
+  FileName?: string;
+  SingerName?: string;
+  Duration?: number;
+  Image?: string;
+  PayType?: number;
+  Privilege?: number;
+  trans_param?: { union_cover?: string };
+}
+
+interface SearchResponse {
+  data?: {
+    total?: number;
+    lists?: RawSearchSong[];
+  };
+}
+
 const FALLBACK_COVERS = [
   "linear-gradient(145deg, #ff8c69, #ff5e73)",
   "linear-gradient(145deg, #7f7cff, #b16cea)",
@@ -45,6 +65,27 @@ async function requestJson<T>(path: string): Promise<T> {
     headers: { Accept: "application/json" },
   });
   if (!response.ok) throw new Error(`请求失败（${response.status}）`);
+  return response.json() as Promise<T>;
+}
+
+async function requestSearch<T>(keyword: string): Promise<T> {
+  if (Reflect.has(window, "__TAURI_INTERNALS__")) {
+    return invoke<T>("search_kugou", { keyword });
+  }
+
+  const params = new URLSearchParams({
+    keyword,
+    page: "1",
+    pagesize: "30",
+    platform: "WebFilter",
+    filter: "2",
+    iscorrection: "1",
+    privilege_filter: "0",
+  });
+  const response = await fetch(`/kugou-search-api/song_search_v2?${params}`, {
+    headers: { Accept: "application/json" },
+  });
+  if (!response.ok) throw new Error(`搜索请求失败（${response.status}）`);
   return response.json() as Promise<T>;
 }
 
@@ -79,6 +120,19 @@ function normalizeSong(raw: RawSong, index: number): Song {
     rank: raw.sort || index + 1,
     previousRank: raw.last_sort,
     access: normalizeAccess(raw.pay_type, raw.privilege),
+  };
+}
+
+function normalizeSearchSong(raw: RawSearchSong, index: number): Song {
+  const parsed = splitFilename(raw.FileName);
+  return {
+    id: raw.FileHash || `search-song-${index}`,
+    title: raw.SongName || parsed.title,
+    artist: raw.SingerName || parsed.artist,
+    duration: raw.Duration || 0,
+    cover: imageUrl(raw.Image || raw.trans_param?.union_cover),
+    rank: index + 1,
+    access: normalizeAccess(raw.PayType, raw.Privilege),
   };
 }
 
@@ -119,5 +173,23 @@ export async function getRankDetail(rankId: number, page = 1): Promise<RankDetai
     total: payload.songs?.total || rawSongs.length,
     page: payload.songs?.page || page,
     pageSize: payload.songs?.pagesize || rawSongs.length,
+  };
+}
+
+export async function searchSongs(keyword: string): Promise<SongSearchResult> {
+  const payload = await requestSearch<SearchResponse>(keyword);
+  const rawSongs = payload.data?.lists || [];
+  const seen = new Set<string>();
+  const songs = rawSongs
+    .map(normalizeSearchSong)
+    .filter((song) => {
+      if (seen.has(song.id)) return false;
+      seen.add(song.id);
+      return true;
+    });
+
+  return {
+    songs,
+    total: payload.data?.total || songs.length,
   };
 }
